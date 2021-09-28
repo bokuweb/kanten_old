@@ -88,17 +88,17 @@ impl LogListModel {
         };
     }
 
-    pub fn unselect(&mut self) {
-        self.state.select(None);
-    }
-
-    pub fn focus(&mut self) {
-        self.state.focused = true;
-    }
-
-    pub fn blur(&mut self) {
-        self.state.focused = false;
-    }
+    // pub fn unselect(&mut self) {
+    //     self.state.select(None);
+    // }
+    //
+    // pub fn focus(&mut self) {
+    //     self.state.focused = true;
+    // }
+    //
+    // pub fn blur(&mut self) {
+    //     self.state.focused = false;
+    // }
 
     pub fn on_key(&mut self, key: KeyEvent) {
         match key {
@@ -141,10 +141,10 @@ impl LogListItem {
         }
     }
 
-    pub fn style(mut self, style: Style) -> Self {
-        self.style = style;
-        self
-    }
+    // pub fn style(mut self, style: Style) -> Self {
+    //     self.style = style;
+    //     self
+    // }
 
     pub fn height(&self, w: u16) -> usize {
         self.line_builder.run_composer(&self.content, w, "").len()
@@ -174,10 +174,10 @@ impl<'a> LogList<'a> {
         self
     }
 
-    pub fn style(mut self, style: Style) -> LogList<'a> {
-        self.style = style;
-        self
-    }
+    // pub fn style(mut self, style: Style) -> LogList<'a> {
+    //     self.style = style;
+    //     self
+    // }
 
     pub fn highlight_style(mut self, style: Style) -> LogList<'a> {
         self.highlight_style = style;
