@@ -62,7 +62,9 @@ pub enum Message {
 
 impl<'a, D: Dispatcher<Message = Message>> App<'a, D> {
     pub fn new(dispatcher: D, group_names: Vec<String>, opt: Opt) -> App<'a, D> {
-        let mut default_query_input = InputModel::new().set_placeholder("Filter your logs");
+        let mut default_query_input = InputModel::new()
+            .set_placeholder("Filter your logs")
+            .set_value(opt.filter);
         default_query_input.focus();
 
         let group_name_filter = opt.group_name.unwrap_or_default();

@@ -7,10 +7,7 @@ mod components;
 mod models;
 mod option;
 
-use std::{
-    collections::VecDeque,
-    sync::{mpsc::Sender, Arc, RwLock},
-};
+use std::sync::mpsc::Sender;
 // use cloudwatchlogs::{Config, Credentials, Region};
 // https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_StartQuery.html
 use crate::{
@@ -18,7 +15,6 @@ use crate::{
     client::{GroupsClient, QueryClient},
 };
 use client::{Client, SearchResult};
-use humantime::parse_duration;
 
 use crossterm::{
     event::{
@@ -37,58 +33,22 @@ use std::{
 };
 use std::{fs::File, path::PathBuf};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use structopt::StructOpt;
 use tui::{backend::CrosstermBackend, Terminal};
 
 fn setup_logging() -> Result<()> {
     let mut path = get_app_cache_path()?;
     path.push("kanten.log");
-
-    dbg!(&path);
-
     let _ = WriteLogger::init(LevelFilter::Debug, Config::default(), File::create(path)?);
-
     Ok(())
 }
 
 fn get_app_cache_path() -> Result<PathBuf> {
     let mut path = dirs_next::cache_dir().ok_or_else(|| anyhow!("failed to find os cache dir."))?;
-
     path.push("kanten");
     std::fs::create_dir_all(&path)?;
     Ok(path)
-}
-
-pub struct MessageQue {
-    pub messages: VecDeque<app::Message>,
-}
-
-impl MessageQue {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl Default for MessageQue {
-    fn default() -> Self {
-        Self {
-            messages: VecDeque::new(),
-        }
-    }
-}
-
-impl Dispatcher for Arc<RwLock<MessageQue>> {
-    type Message = app::Message;
-
-    fn dispatch(&self, message: app::Message) {
-        // log::debug!("{:?}", message);
-
-        self.write()
-            .expect("failed to write lock")
-            .messages
-            .push_front(message);
-    }
 }
 
 #[derive(Debug)]
@@ -106,7 +66,7 @@ impl Dispatcher for Messenger {
     type Message = app::Message;
 
     fn dispatch(&self, message: app::Message) {
-        log::debug!("{:?}", message);
+        log::debug!("Dispatched message is {:?}", message);
         self.tx.send(message).expect("failed to send message");
     }
 }
@@ -118,7 +78,7 @@ pub trait AsyncTask {
 
 struct Service {
     pub client: client::Client,
-    pub query_id: Option<crate::client::QueryId>,
+    // pub query_id: Option<crate::client::QueryId>,
 }
 
 #[async_trait]
@@ -203,7 +163,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let messenger = Messenger::new(tx1);
     let mut task = Service {
-        query_id: None,
+        // query_id: None,
         client: client.clone(),
     };
 
