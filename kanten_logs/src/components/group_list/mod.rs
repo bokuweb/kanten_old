@@ -1,10 +1,7 @@
 use std::collections::BTreeSet;
 use tui::widgets::ListState;
 
-use crate::components::*;
-
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use tui::{style::Style, text::Span, widgets::ListItem};
 
 pub struct GroupList {
     pub state: ListState,
@@ -59,25 +56,25 @@ impl GroupList {
         };
     }
 
-    pub fn clear(&mut self) {
-        // self.state.offset = 0;
-        self.state.select(Some(0));
-    }
+    // pub fn clear(&mut self) {
+    //     // self.state.offset = 0;
+    //     self.state.select(Some(0));
+    // }
 
-    pub fn to_list_items(&self) -> Vec<ListItem> {
-        let re = regex::Regex::new(&self.filter).expect("Failed to construct Regexp");
-
-        self.items
-            .iter()
-            .filter(|name| re.is_match(name))
-            .map(|item| {
-                let style = Style::default();
-                let mut line = Checkbox::from(self.selected.contains(item)).render();
-                line.0.extend(vec![Span::raw(" "), Span::raw(item)]);
-                ListItem::new(line).style(style)
-            })
-            .collect()
-    }
+    // pub fn to_list_items(&self) -> Vec<ListItem> {
+    //     let re = regex::Regex::new(&self.filter).expect("Failed to construct Regexp");
+    //
+    //     self.items
+    //         .iter()
+    //         .filter(|name| re.is_match(name))
+    //         .map(|item| {
+    //             let style = Style::default();
+    //             let mut line = Checkbox::from(self.selected.contains(item)).render();
+    //             line.0.extend(vec![Span::raw(" "), Span::raw(item)]);
+    //             ListItem::new(line).style(style)
+    //         })
+    //         .collect()
+    // }
 
     pub fn on_key(&mut self, key: KeyEvent) {
         match key {
@@ -146,7 +143,7 @@ impl GroupList {
         self.state.select(Some(i));
     }
 
-    pub fn unselect(&mut self) {
-        self.state.select(None);
-    }
+    // pub fn unselect(&mut self) {
+    //     self.state.select(None);
+    // }
 }

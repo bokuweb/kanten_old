@@ -181,7 +181,7 @@ impl<'a, D: Dispatcher<Message = Message>> App<'a, D> {
                     self.find_string_input.on_key(k);
                     self.logs.set_find_text(self.find_string_input.value());
                 }
-                _ => {}
+                // _ => {}
             },
         }
         Ok(())
