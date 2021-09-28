@@ -14,4 +14,7 @@ pub struct Opt {
     /// Log group name (regular expression).
     #[structopt(short, long)]
     pub group_name: Option<String>,
+
+    #[structopt(short, long, default_value = "")]
+    pub filter: String,
 }
