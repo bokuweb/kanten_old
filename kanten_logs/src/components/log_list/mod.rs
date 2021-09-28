@@ -127,15 +127,17 @@ impl LogListModel {
 
 #[derive(Debug)]
 pub struct LogListItem {
-    content: String,
+    log: String,
+    timestamp: String,
     style: Style,
     line_builder: LineBuilder,
 }
 
 impl LogListItem {
-    pub fn new(content: String) -> Self {
+    pub fn new(timestamp: String, log: String) -> Self {
         LogListItem {
-            content,
+            log,
+            timestamp,
             style: Style::default(),
             line_builder: LineBuilder::new(),
         }
@@ -146,8 +148,12 @@ impl LogListItem {
     //     self
     // }
 
+    pub fn text(&self) -> String {
+        format!("{}    {}", self.timestamp, self.log)
+    }
+
     pub fn height(&self, w: u16) -> usize {
-        self.line_builder.run_composer(&self.content, w, "").len()
+        self.line_builder.run_composer(&self.text(), w, "").len()
     }
 }
 
@@ -289,7 +295,7 @@ impl<'a> StatefulWidget for LogList<'a> {
             let max_element_width = (list_area.width - (elem_x - x)) as usize;
             for (j, line) in item
                 .line_builder
-                .run_composer(&item.content, list_area.width, &state.find_text)
+                .run_composer(&item.text(), list_area.width, &state.find_text)
                 .iter()
                 .enumerate()
             {
