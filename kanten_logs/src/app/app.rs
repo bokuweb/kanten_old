@@ -180,8 +180,7 @@ impl<'a, D: Dispatcher<Message = Message>> App<'a, D> {
                 FocusTarget::FindStringInLogs => {
                     self.find_string_input.on_key(k);
                     self.logs.set_find_text(self.find_string_input.value());
-                }
-                // _ => {}
+                } // _ => {}
             },
         }
         Ok(())
@@ -283,7 +282,8 @@ impl<'a, D: Dispatcher<Message = Message>> App<'a, D> {
         match message {
             Message::GetQueryResultsComplete(items) => {
                 for item in items {
-                    self.logs.push(LogListItem::new(item.message))
+                    self.logs
+                        .push(LogListItem::new(item.timestamp, item.message))
                 }
                 self.query_completed = true;
                 self.loading = false;
