@@ -24,6 +24,7 @@ pub struct LogListState<D: Dispatcher<Message = Message>> {
     selected: Option<usize>,
     focused: bool,
     find_text: String,
+    end_index: usize,
     dispatcher: D,
 }
 
@@ -33,6 +34,7 @@ impl<D: Dispatcher<Message = Message>> LogListState<D> {
             offset: 0,
             selected: None,
             focused: false,
+            end_index: 0,
             find_text: String::default(),
             dispatcher,
         }
@@ -92,6 +94,13 @@ impl<D: Dispatcher<Message = Message>> LogListModel<D> {
         };
     }
 
+    pub fn next_page_if_exist(&mut self) {
+        if self.state.end_index < self.items.len() - 1 {
+            self.state.select(Some(self.state.end_index));
+            self.state.offset = self.state.end_index;
+        }
+    }
+
     // pub fn unselect(&mut self) {
     //     self.state.select(None);
     // }
@@ -103,6 +112,10 @@ impl<D: Dispatcher<Message = Message>> LogListModel<D> {
     // pub fn blur(&mut self) {
     //     self.state.focused = false;
     // }
+
+    pub fn update_end_index(&mut self, index: usize) {
+        self.state.end_index = index;
+    }
 
     pub fn on_key(&mut self, key: KeyEvent) {
         match key {
@@ -124,6 +137,15 @@ impl<D: Dispatcher<Message = Message>> LogListModel<D> {
                 code: KeyCode::Up,
                 modifiers: KeyModifiers::NONE,
             } => self.previous_if_exist(),
+            // page down
+            KeyEvent {
+                code: KeyCode::Char('v'),
+                modifiers: KeyModifiers::CONTROL,
+            }
+            | KeyEvent {
+                code: KeyCode::PageDown,
+                modifiers: KeyModifiers::NONE,
+            } => self.next_page_if_exist(),
             _ => {}
         }
     }
@@ -317,8 +339,10 @@ impl<'a, D: Dispatcher<Message = Message>> StatefulWidget for LogList<'a, D> {
             }
         }
 
-        state
-            .dispatcher
-            .dispatch(crate::app::Message::UpdateLogListEndIndex(end));
+        if state.end_index != end {
+            state
+                .dispatcher
+                .dispatch(crate::app::Message::UpdateLogListEndIndex(end));
+        }
     }
 }

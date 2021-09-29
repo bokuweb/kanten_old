@@ -301,6 +301,9 @@ impl<'a, D: Dispatcher<Message = Message> + Clone> App<'a, D> {
             Message::Tick => {
                 self.on_tick().await;
             }
+            Message::UpdateLogListEndIndex(index) => {
+                self.logs.update_end_index(index);
+            }
             _ => {}
         }
     }
