@@ -24,7 +24,7 @@ pub enum FocusTarget {
 
 pub struct App<'a, D>
 where
-    D: Dispatcher,
+    D: Dispatcher<Message = Message>,
 {
     pub loading: bool,
     pub dispatcher: D,
@@ -32,7 +32,7 @@ where
     pub should_quit: bool,
     pub should_query_restart: bool,
     pub group_names: GroupList,
-    pub logs: LogListModel,
+    pub logs: LogListModel<D>,
     pub duration: Duration,
     pub query_started: bool,
     pub query_completed: bool,
@@ -43,7 +43,7 @@ where
     pub query_id: Option<QueryId>,
 }
 
-pub trait Dispatcher {
+pub trait Dispatcher: Sized {
     type Message;
 
     fn dispatch(&self, message: Self::Message);
@@ -58,9 +58,10 @@ pub enum Message {
     StartQueryRequest(StartQueryInput),
     StartQueryComplete(QueryId),
     StopQueryRequest(QueryId),
+    UpdateLogListEndIndex(usize),
 }
 
-impl<'a, D: Dispatcher<Message = Message>> App<'a, D> {
+impl<'a, D: Dispatcher<Message = Message> + Clone> App<'a, D> {
     pub fn new(dispatcher: D, group_names: Vec<String>, opt: Opt) -> App<'a, D> {
         let mut default_query_input = InputModel::new()
             .set_placeholder("Filter your logs")
@@ -114,12 +115,12 @@ impl<'a, D: Dispatcher<Message = Message>> App<'a, D> {
 
         App {
             loading: false,
-            dispatcher,
             focus_state: FocusTarget::LogFilter,
             should_quit: false,
             should_query_restart: false,
             group_names,
-            logs: LogListModel::new(),
+            logs: LogListModel::new(dispatcher.clone()),
+            dispatcher,
             duration,
             query_id: None,
             query_started: false,

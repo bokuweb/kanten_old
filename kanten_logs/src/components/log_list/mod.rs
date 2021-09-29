@@ -9,33 +9,37 @@ use tui::{
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
+use crate::app::{Dispatcher, Message};
+
 use self::line_builder::LineBuilder;
 
-pub struct LogListModel {
-    pub state: LogListState,
+pub struct LogListModel<D: Dispatcher<Message = Message>> {
+    pub state: LogListState<D>,
     pub items: Vec<LogListItem>,
 }
 
 #[derive(Debug, Clone)]
-pub struct LogListState {
+pub struct LogListState<D: Dispatcher<Message = Message>> {
     offset: usize,
     selected: Option<usize>,
     focused: bool,
     find_text: String,
+    dispatcher: D,
 }
 
-impl Default for LogListState {
-    fn default() -> LogListState {
+impl<D: Dispatcher<Message = Message>> LogListState<D> {
+    pub fn new(dispatcher: D) -> LogListState<D> {
         LogListState {
             offset: 0,
             selected: None,
             focused: false,
             find_text: String::default(),
+            dispatcher,
         }
     }
 }
 
-impl LogListState {
+impl<D: Dispatcher<Message = Message>> LogListState<D> {
     pub fn selected(&self) -> Option<usize> {
         self.selected
     }
@@ -48,9 +52,9 @@ impl LogListState {
     }
 }
 
-impl LogListModel {
-    pub fn new() -> Self {
-        let mut state = LogListState::default();
+impl<D: Dispatcher<Message = Message>> LogListModel<D> {
+    pub fn new(d: D) -> Self {
+        let mut state = LogListState::new(d);
         state.select(Some(0));
         LogListModel {
             state,
@@ -158,24 +162,26 @@ impl LogListItem {
 }
 
 #[derive(Debug)]
-pub struct LogList<'a> {
+pub struct LogList<'a, D> {
     block: Option<Block<'a>>,
     items: &'a [LogListItem],
     style: Style,
     highlight_style: Style,
+    _phantom: std::marker::PhantomData<fn() -> D>,
 }
 
-impl<'a> LogList<'a> {
-    pub fn new(items: &'a [LogListItem]) -> LogList<'a> {
-        LogList {
+impl<'a, D> LogList<'a, D> {
+    pub fn new(items: &'a [LogListItem]) -> LogList<'a, D> {
+        Self {
             block: None,
             style: Style::default(),
             items,
             highlight_style: Style::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
-    pub fn block(mut self, block: Block<'a>) -> LogList<'a> {
+    pub fn block(mut self, block: Block<'a>) -> LogList<'a, D> {
         self.block = Some(block);
         self
     }
@@ -185,14 +191,14 @@ impl<'a> LogList<'a> {
     //     self
     // }
 
-    pub fn highlight_style(mut self, style: Style) -> LogList<'a> {
+    pub fn highlight_style(mut self, style: Style) -> LogList<'a, D> {
         self.highlight_style = style;
         self
     }
 }
 
-impl<'a> StatefulWidget for LogList<'a> {
-    type State = LogListState;
+impl<'a, D: Dispatcher<Message = Message>> StatefulWidget for LogList<'a, D> {
+    type State = LogListState<D>;
 
     fn render(mut self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         buf.set_style(area, self.style);
@@ -310,5 +316,9 @@ impl<'a> StatefulWidget for LogList<'a> {
                 }
             }
         }
+
+        state
+            .dispatcher
+            .dispatch(crate::app::Message::UpdateLogListEndIndex(end));
     }
 }

@@ -1,4 +1,4 @@
-use crate::app::{app::FocusTarget, App};
+use crate::app::{app::FocusTarget, App, Dispatcher, Message};
 use crate::components::*;
 
 use tui::{
@@ -10,7 +10,7 @@ use tui::{
     Frame,
 };
 
-pub fn draw<B, D: super::app::Dispatcher>(f: &mut Frame<B>, app: &mut App<D>)
+pub fn draw<B, D: Dispatcher<Message = Message>>(f: &mut Frame<B>, app: &mut App<D>)
 where
     B: Backend,
 {
@@ -28,8 +28,11 @@ where
     draw_status(f, app, horizontal[1]);
 }
 
-fn draw_query_form<B, D: super::app::Dispatcher>(f: &mut Frame<B>, app: &mut App<D>, area: Rect)
-where
+fn draw_query_form<B, D: Dispatcher<Message = Message>>(
+    f: &mut Frame<B>,
+    app: &mut App<D>,
+    area: Rect,
+) where
     B: Backend,
 {
     let border_color = if app.default_query_input.is_focused() || app.duration_input.is_focused() {
@@ -58,7 +61,7 @@ where
     duration_input.draw(f, inner_chunks[1]);
 }
 
-fn draw_body<B, D: super::app::Dispatcher>(f: &mut Frame<B>, app: &mut App<D>, area: Rect)
+fn draw_body<B, D: Dispatcher<Message = Message>>(f: &mut Frame<B>, app: &mut App<D>, area: Rect)
 where
     B: Backend,
 {
@@ -83,7 +86,7 @@ where
     }
 }
 
-fn draw_status<B, D: super::app::Dispatcher>(f: &mut Frame<B>, app: &mut App<D>, area: Rect)
+fn draw_status<B, D: Dispatcher<Message = Message>>(f: &mut Frame<B>, app: &mut App<D>, area: Rect)
 where
     B: Backend,
 {
@@ -102,7 +105,7 @@ where
     f.render_widget(paragraph, area);
 }
 
-fn draw_groups<B, D: super::app::Dispatcher>(f: &mut Frame<B>, app: &mut App<D>, area: Rect)
+fn draw_groups<B, D: Dispatcher<Message = Message>>(f: &mut Frame<B>, app: &mut App<D>, area: Rect)
 where
     B: Backend,
 {
@@ -164,7 +167,7 @@ where
     f.render_stateful_widget(groups, inner_chunks[1], &mut app.group_names.state);
 }
 
-fn draw_logs<B, D: super::app::Dispatcher>(f: &mut Frame<B>, app: &mut App<D>, area: Rect)
+fn draw_logs<B, D: Dispatcher<Message = Message>>(f: &mut Frame<B>, app: &mut App<D>, area: Rect)
 where
     B: Backend,
 {

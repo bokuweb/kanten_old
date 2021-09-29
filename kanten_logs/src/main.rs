@@ -51,7 +51,7 @@ fn get_app_cache_path() -> Result<PathBuf> {
     Ok(path)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Messenger {
     pub tx: Sender<app::Message>,
 }
