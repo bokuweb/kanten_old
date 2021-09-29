@@ -58,6 +58,7 @@ pub enum Message {
     StartQueryRequest(StartQueryInput),
     StartQueryComplete(QueryId),
     StopQueryRequest(QueryId),
+    UpdateLogListStartIndex(usize),
     UpdateLogListEndIndex(usize),
 }
 
@@ -303,6 +304,9 @@ impl<'a, D: Dispatcher<Message = Message> + Clone> App<'a, D> {
             }
             Message::UpdateLogListEndIndex(index) => {
                 self.logs.update_end_index(index);
+            }
+            Message::UpdateLogListStartIndex(index) => {
+                self.logs.update_start_index(index);
             }
             _ => {}
         }

@@ -25,6 +25,7 @@ pub struct LogListState<D: Dispatcher<Message = Message>> {
     focused: bool,
     find_text: String,
     end_index: usize,
+    start_index: usize,
     dispatcher: D,
 }
 
@@ -34,6 +35,7 @@ impl<D: Dispatcher<Message = Message>> LogListState<D> {
             offset: 0,
             selected: None,
             focused: false,
+            start_index: 0,
             end_index: 0,
             find_text: String::default(),
             dispatcher,
@@ -101,6 +103,10 @@ impl<D: Dispatcher<Message = Message>> LogListModel<D> {
         }
     }
 
+    pub fn previous_page_if_exist(&mut self) {
+        // TODO: Support page up
+    }
+
     // pub fn unselect(&mut self) {
     //     self.state.select(None);
     // }
@@ -115,6 +121,10 @@ impl<D: Dispatcher<Message = Message>> LogListModel<D> {
 
     pub fn update_end_index(&mut self, index: usize) {
         self.state.end_index = index;
+    }
+
+    pub fn update_start_index(&mut self, index: usize) {
+        self.state.start_index = index;
     }
 
     pub fn on_key(&mut self, key: KeyEvent) {
@@ -137,6 +147,15 @@ impl<D: Dispatcher<Message = Message>> LogListModel<D> {
                 code: KeyCode::Up,
                 modifiers: KeyModifiers::NONE,
             } => self.previous_if_exist(),
+            // page up
+            KeyEvent {
+                code: KeyCode::Char('v'),
+                modifiers: KeyModifiers::ALT,
+            }
+            | KeyEvent {
+                code: KeyCode::PageUp,
+                modifiers: KeyModifiers::NONE,
+            } => self.previous_page_if_exist(),
             // page down
             KeyEvent {
                 code: KeyCode::Char('v'),
@@ -343,6 +362,12 @@ impl<'a, D: Dispatcher<Message = Message>> StatefulWidget for LogList<'a, D> {
             state
                 .dispatcher
                 .dispatch(crate::app::Message::UpdateLogListEndIndex(end));
+        }
+
+        if state.start_index != start {
+            state
+                .dispatcher
+                .dispatch(crate::app::Message::UpdateLogListStartIndex(start));
         }
     }
 }
