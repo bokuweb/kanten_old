@@ -51,7 +51,7 @@ fn get_app_cache_path() -> Result<PathBuf> {
     Ok(path)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Messenger {
     pub tx: Sender<app::Message>,
 }
@@ -86,11 +86,11 @@ impl AsyncTask for Service {
     async fn run(&mut self, message: Message) -> Option<Message> {
         match message {
             Message::GetQueryResultsRequest(query_id) => {
-                // log::debug!("request query restul");
+                log::trace!("request query result");
                 if let Ok(SearchResult::Complete(items)) =
                     self.client.get_default_query_results(&query_id).await
                 {
-                    // log::debug!("items {}", items.len());
+                    log::trace!("items {}", items.len());
                     Some(Message::GetQueryResultsComplete(items))
                 } else {
                     // TODO: handle error
@@ -111,7 +111,7 @@ impl AsyncTask for Service {
                 let _ = self.client.stop_query(&query_id).await;
                 None
             }
-            _ => None,
+            _ => Some(message),
         }
     }
 }

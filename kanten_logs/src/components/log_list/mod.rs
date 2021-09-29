@@ -9,33 +9,41 @@ use tui::{
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
+use crate::app::{Dispatcher, Message};
+
 use self::line_builder::LineBuilder;
 
-pub struct LogListModel {
-    pub state: LogListState,
+pub struct LogListModel<D: Dispatcher<Message = Message>> {
+    pub state: LogListState<D>,
     pub items: Vec<LogListItem>,
 }
 
 #[derive(Debug, Clone)]
-pub struct LogListState {
+pub struct LogListState<D: Dispatcher<Message = Message>> {
     offset: usize,
     selected: Option<usize>,
     focused: bool,
     find_text: String,
+    end_index: usize,
+    start_index: usize,
+    dispatcher: D,
 }
 
-impl Default for LogListState {
-    fn default() -> LogListState {
+impl<D: Dispatcher<Message = Message>> LogListState<D> {
+    pub fn new(dispatcher: D) -> LogListState<D> {
         LogListState {
             offset: 0,
             selected: None,
             focused: false,
+            start_index: 0,
+            end_index: 0,
             find_text: String::default(),
+            dispatcher,
         }
     }
 }
 
-impl LogListState {
+impl<D: Dispatcher<Message = Message>> LogListState<D> {
     pub fn selected(&self) -> Option<usize> {
         self.selected
     }
@@ -48,9 +56,9 @@ impl LogListState {
     }
 }
 
-impl LogListModel {
-    pub fn new() -> Self {
-        let mut state = LogListState::default();
+impl<D: Dispatcher<Message = Message>> LogListModel<D> {
+    pub fn new(d: D) -> Self {
+        let mut state = LogListState::new(d);
         state.select(Some(0));
         LogListModel {
             state,
@@ -88,6 +96,17 @@ impl LogListModel {
         };
     }
 
+    pub fn next_page_if_exist(&mut self) {
+        if self.state.end_index < self.items.len() - 1 {
+            self.state.select(Some(self.state.end_index));
+            self.state.offset = self.state.end_index;
+        }
+    }
+
+    pub fn previous_page_if_exist(&mut self) {
+        // TODO: Support page up
+    }
+
     // pub fn unselect(&mut self) {
     //     self.state.select(None);
     // }
@@ -99,6 +118,14 @@ impl LogListModel {
     // pub fn blur(&mut self) {
     //     self.state.focused = false;
     // }
+
+    pub fn update_end_index(&mut self, index: usize) {
+        self.state.end_index = index;
+    }
+
+    pub fn update_start_index(&mut self, index: usize) {
+        self.state.start_index = index;
+    }
 
     pub fn on_key(&mut self, key: KeyEvent) {
         match key {
@@ -120,6 +147,24 @@ impl LogListModel {
                 code: KeyCode::Up,
                 modifiers: KeyModifiers::NONE,
             } => self.previous_if_exist(),
+            // page up
+            KeyEvent {
+                code: KeyCode::Char('v'),
+                modifiers: KeyModifiers::ALT,
+            }
+            | KeyEvent {
+                code: KeyCode::PageUp,
+                modifiers: KeyModifiers::NONE,
+            } => self.previous_page_if_exist(),
+            // page down
+            KeyEvent {
+                code: KeyCode::Char('v'),
+                modifiers: KeyModifiers::CONTROL,
+            }
+            | KeyEvent {
+                code: KeyCode::PageDown,
+                modifiers: KeyModifiers::NONE,
+            } => self.next_page_if_exist(),
             _ => {}
         }
     }
@@ -158,24 +203,26 @@ impl LogListItem {
 }
 
 #[derive(Debug)]
-pub struct LogList<'a> {
+pub struct LogList<'a, D> {
     block: Option<Block<'a>>,
     items: &'a [LogListItem],
     style: Style,
     highlight_style: Style,
+    _phantom: std::marker::PhantomData<fn() -> D>,
 }
 
-impl<'a> LogList<'a> {
-    pub fn new(items: &'a [LogListItem]) -> LogList<'a> {
-        LogList {
+impl<'a, D> LogList<'a, D> {
+    pub fn new(items: &'a [LogListItem]) -> LogList<'a, D> {
+        Self {
             block: None,
             style: Style::default(),
             items,
             highlight_style: Style::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
-    pub fn block(mut self, block: Block<'a>) -> LogList<'a> {
+    pub fn block(mut self, block: Block<'a>) -> LogList<'a, D> {
         self.block = Some(block);
         self
     }
@@ -185,14 +232,14 @@ impl<'a> LogList<'a> {
     //     self
     // }
 
-    pub fn highlight_style(mut self, style: Style) -> LogList<'a> {
+    pub fn highlight_style(mut self, style: Style) -> LogList<'a, D> {
         self.highlight_style = style;
         self
     }
 }
 
-impl<'a> StatefulWidget for LogList<'a> {
-    type State = LogListState;
+impl<'a, D: Dispatcher<Message = Message>> StatefulWidget for LogList<'a, D> {
+    type State = LogListState<D>;
 
     fn render(mut self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         buf.set_style(area, self.style);
@@ -309,6 +356,18 @@ impl<'a> StatefulWidget for LogList<'a> {
                     );
                 }
             }
+        }
+
+        if state.end_index != end {
+            state
+                .dispatcher
+                .dispatch(crate::app::Message::UpdateLogListEndIndex(end));
+        }
+
+        if state.start_index != start {
+            state
+                .dispatcher
+                .dispatch(crate::app::Message::UpdateLogListStartIndex(start));
         }
     }
 }
