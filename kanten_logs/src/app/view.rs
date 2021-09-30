@@ -92,6 +92,8 @@ where
 {
     let text = if app.loading {
         vec![Spans::from("loading...")]
+    } else if app.too_much_groups_specified {
+        vec![Spans::from("too much groups specified. uncheck some groups...")]
     } else {
         vec![Spans::from(format!(
             "{} items found.",

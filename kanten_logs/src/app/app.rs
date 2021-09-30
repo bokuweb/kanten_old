@@ -11,6 +11,7 @@ use crossterm::event::KeyModifiers;
 
 use crate::{client::*, components::*};
 use crate::{models::Duration, option::Opt};
+pub(crate) const SPECIFIABLE_GROUPS_COUNT: usize = 20;
 
 #[derive(Debug, PartialEq)]
 pub enum FocusTarget {
@@ -27,6 +28,7 @@ where
     D: Dispatcher<Message = Message>,
 {
     pub loading: bool,
+    pub too_much_groups_specified: bool,
     pub dispatcher: D,
     pub focus_state: FocusTarget,
     pub should_quit: bool,
@@ -116,6 +118,7 @@ impl<'a, D: Dispatcher<Message = Message> + Clone> App<'a, D> {
 
         App {
             loading: false,
+            too_much_groups_specified: false,
             focus_state: FocusTarget::LogFilter,
             should_quit: false,
             should_query_restart: false,
@@ -201,9 +204,12 @@ impl<'a, D: Dispatcher<Message = Message> + Clone> App<'a, D> {
         if !self.query_started || self.should_query_restart {
             log::trace!("restart query");
             self.should_query_restart = false;
+            self.too_much_groups_specified = false;
 
             let groups: Vec<String> = self.group_names.selected.clone().into_iter().collect();
-            if !groups.is_empty() && self.duration.is_valid() {
+            if groups.len() > SPECIFIABLE_GROUPS_COUNT {
+                self.too_much_groups_specified = true;
+            } else if !groups.is_empty() && self.duration.is_valid() {
                 let Duration::Duration { start, end } = self.duration;
                 self.query_started = true;
                 self.loading = true;
