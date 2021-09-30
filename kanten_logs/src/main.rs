@@ -104,7 +104,7 @@ impl AsyncTask for Service {
                     .client
                     .start_default_query(input.clone())
                     .await
-                    .expect(&format!("Failed to start query {:?}", input));
+                    .unwrap_or_else(|_| panic!("Failed to start query {:?}", input));
                 Some(Message::StartQueryComplete(query_id))
             }
             Message::StopQueryRequest(query_id) => {
