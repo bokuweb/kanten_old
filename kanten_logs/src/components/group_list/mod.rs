@@ -29,7 +29,7 @@ impl GroupList {
         } else {
             BTreeSet::new()
         };
-        let filtered: Vec<String> = selected.iter().cloned().collect();
+        let filtered: Vec<String> = items.clone();
         state.select(Some(0));
 
         GroupList {
