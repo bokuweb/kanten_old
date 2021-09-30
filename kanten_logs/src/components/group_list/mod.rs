@@ -1,5 +1,6 @@
 use std::collections::BTreeSet;
 use tui::widgets::ListState;
+use crate::app;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
@@ -25,6 +26,7 @@ impl GroupList {
                 .iter()
                 .filter(|name| re.is_match(name))
                 .cloned()
+                .take(app::SPECIFIABLE_GROUPS_COUNT)
                 .collect()
         } else {
             BTreeSet::new()
