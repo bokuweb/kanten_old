@@ -173,8 +173,6 @@ fn draw_logs<B, D: Dispatcher<Message = Message>>(f: &mut Frame<B>, app: &mut Ap
 where
     B: Backend,
 {
-    log::debug!("{} items", app.logs.items.len());
-
     let inner_chunks = Layout::default()
         .constraints([Constraint::Min(1), Constraint::Length(3)].as_ref())
         .direction(Direction::Vertical)

@@ -66,7 +66,6 @@ impl Dispatcher for Messenger {
     type Message = app::Message;
 
     fn dispatch(&self, message: app::Message) {
-        log::debug!("Dispatched message is {:?}", message);
         self.tx.send(message).expect("failed to send message");
     }
 }

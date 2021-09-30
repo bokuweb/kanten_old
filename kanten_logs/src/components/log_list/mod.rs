@@ -25,7 +25,7 @@ pub struct LogListState<D: Dispatcher<Message = Message>> {
     focused: bool,
     find_text: String,
     end_index: usize,
-    start_index: usize,
+    prev_page_start_index: usize,
     dispatcher: D,
 }
 
@@ -35,7 +35,7 @@ impl<D: Dispatcher<Message = Message>> LogListState<D> {
             offset: 0,
             selected: None,
             focused: false,
-            start_index: 0,
+            prev_page_start_index: 0,
             end_index: 0,
             find_text: String::default(),
             dispatcher,
@@ -104,7 +104,8 @@ impl<D: Dispatcher<Message = Message>> LogListModel<D> {
     }
 
     pub fn previous_page_if_exist(&mut self) {
-        // TODO: Support page up
+        self.state.select(Some(self.state.prev_page_start_index));
+        self.state.offset = self.state.prev_page_start_index;
     }
 
     // pub fn unselect(&mut self) {
@@ -123,8 +124,8 @@ impl<D: Dispatcher<Message = Message>> LogListModel<D> {
         self.state.end_index = index;
     }
 
-    pub fn update_start_index(&mut self, index: usize) {
-        self.state.start_index = index;
+    pub fn update_prev_page_start_index(&mut self, index: usize) {
+        self.state.prev_page_start_index = index;
     }
 
     pub fn on_key(&mut self, key: KeyEvent) {
@@ -364,10 +365,26 @@ impl<'a, D: Dispatcher<Message = Message>> StatefulWidget for LogList<'a, D> {
                 .dispatch(crate::app::Message::UpdateLogListEndIndex(end));
         }
 
-        if state.start_index != start {
+        let mut prev_page_start_index = state.offset;
+        let mut height = 0;
+        loop {
+            if prev_page_start_index == 0 {
+                break;
+            }
+            let item_height = self.items[prev_page_start_index].height(list_area.width);
+            height += item_height;
+            if height > list_height {
+                break;
+            }
+            prev_page_start_index -= 1;
+        }
+
+        if state.prev_page_start_index != prev_page_start_index {
             state
                 .dispatcher
-                .dispatch(crate::app::Message::UpdateLogListStartIndex(start));
+                .dispatch(crate::app::Message::UpdateLogListPrevPageStartIndex(
+                    prev_page_start_index,
+                ));
         }
     }
 }
