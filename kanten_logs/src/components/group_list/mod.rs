@@ -20,18 +20,25 @@ impl GroupList {
     ) -> GroupList {
         let mut state = ListState::default();
         let filter = filter.into();
-        let selected: std::collections::BTreeSet<String> = if !filter.is_empty() && default_select {
+        let filtered: Vec<String> = if filter.is_empty() {
+            items.clone()
+        } else {
             let re = regex::Regex::new(&filter).expect("Failed to construct Regexp");
             items
                 .iter()
                 .filter(|name| re.is_match(name))
+                .cloned()
+                .collect()
+        };
+        let selected: std::collections::BTreeSet<String> = if !filter.is_empty() && default_select {
+            filtered
+                .iter()
                 .cloned()
                 .take(app::SPECIFIABLE_GROUPS_COUNT)
                 .collect()
         } else {
             BTreeSet::new()
         };
-        let filtered: Vec<String> = items.clone();
         state.select(Some(0));
 
         GroupList {
